@@ -2,24 +2,28 @@
 
 namespace Database\Seeders;
 
+use App\Models\Department;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // 1. Buat 1 Departemen Default
+        $dept = Department::create([
+            'name' => 'IT & Engineering',
+            'description' => 'Software Developer Department'
+        ]);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // 2. Buat Akun Super Admin
+        User::create([
+            'name' => 'Super Admin',
+            'email' => 'admin@qrpresence.com',
+            'password' => Hash::make('password123'),
+            'role' => 'admin',
+            'department_id' => $dept->id,
         ]);
     }
 }
