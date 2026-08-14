@@ -67,10 +67,12 @@ export default function Sessions() {
   // 4. Mutation untuk Tambah Sesi
   const createMutation = useMutation({
     mutationFn: async (values: z.infer<typeof sessionSchema>) => {
-      // Mengubah format string datetime-local menjadi standar ISO untuk backend
+      // Ubah "2026-08-14T11:05" menjadi "2026-08-14 11:05:00" (Format kesukaan Laravel)
+      const formattedDate = values.valid_until.replace('T', ' ') + ':00';
+      
       const formattedData = {
         ...values,
-        valid_until: new Date(values.valid_until).toISOString(),
+        valid_until: formattedDate,
       };
       return api.post("/attendance-sessions", formattedData);
     },
@@ -80,7 +82,17 @@ export default function Sessions() {
       setIsCreateModalOpen(false);
       form.reset();
     },
-    onError: () => toast.error("Gagal membuat sesi absensi"),
+    onError: (error: any) => {
+      // Menangkap dan menampilkan pesan error SPESIFIK dari Laravel
+      const errorData = error.response?.data;
+      if (errorData?.errors) {
+        // Ambil pesan error pertama dari validasi Laravel
+        const firstError = Object.values(errorData.errors)[0] as string[];
+        toast.error(`Gagal: ${firstError[0]}`);
+      } else {
+        toast.error(errorData?.message || "Gagal membuat sesi absensi");
+      }
+    },
   });
 
   // 5. Mutation untuk Hapus Sesi
