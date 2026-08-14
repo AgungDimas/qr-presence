@@ -2,18 +2,26 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import Login from './pages/auth/Login';
+import ProtectedRoute from './components/ProtectedRoute';
+import DashboardLayout from './layouts/DashboardLayout';
+import Dashboard from './pages/Dashboard';
 
 function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
-          {/* Default route lempar ke login */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          {/* Public Routes */}
           <Route path="/login" element={<Login />} />
           
-          {/* Nanti kita isi ini di step selanjutnya */}
-          <Route path="/dashboard" element={<div className="p-8 font-bold text-2xl">Halo, Anda berhasil login! (Dashboard segera hadir)</div>} />
+          {/* Protected Routes (Harus Login) */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<DashboardLayout />}>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              {/* Rute fitur lain akan kita tambahkan di sini nanti */}
+            </Route>
+          </Route>
         </Routes>
       </Router>
       <Toaster position="top-right" />

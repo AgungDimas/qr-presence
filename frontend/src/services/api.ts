@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Kita sesuaikan dengan port Laravel yang baru (8080)
 const api = axios.create({
-    baseURL: 'http://127.0.0.1:8080/api',
+    baseURL: 'http://localhost:8000/api',
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
