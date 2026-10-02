@@ -7,6 +7,8 @@ import DashboardLayout from './layouts/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import Sessions from './pages/sessions/Sessions';
 import Scan from './pages/attendances/Scan';
+import Employees from './pages/employees/Employees';
+import Settings from './pages/settings/Settings';
 
 function App() {
   return (
@@ -23,7 +25,8 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/sessions" element={<Sessions />} />
               <Route path="/scan" element={<Scan />} />
-              {/* Rute fitur lain akan kita tambahkan di sini nanti */}
+              <Route path="/employees" element={<Employees />} />
+              <Route path="/settings" element={<Settings />} />
             </Route>
           </Route>
         </Routes>

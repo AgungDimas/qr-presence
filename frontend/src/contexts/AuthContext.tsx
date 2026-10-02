@@ -16,6 +16,7 @@ interface AuthContextType {
     token: string | null;
     login: (token: string, user: User) => void;
     logout: () => Promise<void> | void;
+    refreshUser: () => Promise<User | null>;
     isAuthenticated: boolean;
 }
 
@@ -70,8 +71,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(userData);
     };
 
+    const refreshUser = useCallback(async (): Promise<User | null> => {
+        if (!token) return null;
+        try {
+            const res = await api.get('/me');
+            const fresh = (res.data?.user ?? res.data) as User | undefined;
+            if (fresh) {
+                setUser(fresh);
+                return fresh;
+            }
+            return null;
+        } catch (err: any) {
+            if (err?.response?.status === 401) {
+                logout();
+            }
+            return null;
+        }
+    }, [token, logout]);
+
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated: !!token }}>
+        <AuthContext.Provider value={{ user, token, login, logout, refreshUser, isAuthenticated: !!token }}>
             {children}
         </AuthContext.Provider>
     );

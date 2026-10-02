@@ -48,17 +48,11 @@ const navigation: NavItem[] = [
     name: "Pegawai",
     href: "/employees",
     icon: Users,
-    disabled: true,
-    badge: "Segera Hadir",
-    badgeVariant: "amber",
   },
   {
     name: "Pengaturan",
     href: "/settings",
     icon: Settings,
-    disabled: true,
-    badge: "Segera Hadir",
-    badgeVariant: "amber",
   },
 ];
 
@@ -233,12 +227,14 @@ export default function DashboardLayout() {
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[260px_1fr] bg-zinc-50/80">
-      {/* Sidebar Desktop */}
-      <div className="hidden border-r border-zinc-900/10 md:block">
-        <SidebarContent />
-      </div>
+      {/* Sidebar Desktop - Sticky, TIDAK ikut scroll konten utama */}
+      <aside className="hidden md:block sticky top-0 h-screen w-full overflow-hidden border-r border-zinc-900/10">
+        <div className="h-full overflow-y-auto overflow-x-hidden scrollbar-hide">
+          <SidebarContent />
+        </div>
+      </aside>
 
-      <div className="flex flex-col min-w-0">
+      <div className="flex flex-col min-w-0 min-h-screen">
         {/* Header / Topbar */}
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-zinc-200/70 bg-white/80 backdrop-blur-lg px-4 lg:h-[64px] lg:px-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
           {/* Hamburger Menu Mobile */}

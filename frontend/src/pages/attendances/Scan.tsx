@@ -365,7 +365,7 @@ export default function Scan() {
               gps: !!location,
             });
             setStatus("success");
-            toast.success("Absensi berhasil dicatat! 🎉");
+            toast.success("Absensi berhasil dicatat!");
           } catch (err: any) {
             const data = err?.response?.data;
             let msg = "QR Code tidak valid / sesi sudah kedaluwarsa.";

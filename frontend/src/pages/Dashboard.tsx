@@ -15,11 +15,11 @@ import {
   Activity,
   CalendarCheck2,
   UserCheck2,
+  Info,
 } from "lucide-react";
 import api from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 type Session = {
@@ -100,13 +100,11 @@ function QuickAction({
   to,
   gradient,
   delay,
-  onClick,
 }: {
   label: string;
   description: string;
   icon: any;
-  to?: string;
-  onClick?: () => void;
+  to: string;
   gradient: "blue" | "emerald" | "violet" | "amber";
   delay?: number;
 }) {
@@ -122,35 +120,34 @@ function QuickAction({
     violet: "group-hover:from-violet-50 group-hover:to-violet-50/60 hover:border-violet-200",
     amber: "group-hover:from-amber-50 group-hover:to-amber-50/60 hover:border-amber-200",
   };
-  const content = (
-    <div
-      className={`group relative overflow-hidden rounded-2xl border border-zinc-200 bg-gradient-to-br from-white to-zinc-50 p-5 card-shadow-sm card-hover ${hoverGrades[gradient]}`}
-      style={{ animationDelay: `${delay}ms` }}
-      onClick={onClick}
-    >
-      <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity from-zinc-900/[0.04] to-transparent"></div>
-      <div className="relative z-10 flex items-start gap-4">
-        <div
-          className={`h-12 w-12 shrink-0 rounded-xl bg-gradient-to-br ${grads[gradient]} text-white shadow-lg shadow-black/10 flex items-center justify-center`}
-        >
-          <Icon className="h-6 w-6" strokeWidth={2.25} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="font-semibold text-zinc-900 tracking-tight">
-              {label}
-            </h3>
-            <ChevronRight className="h-4 w-4 text-zinc-400 group-hover:text-zinc-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+  return (
+    <Link to={to}>
+      <div
+        className={`group relative overflow-hidden rounded-2xl border border-zinc-200 bg-gradient-to-br from-white to-zinc-50 p-5 card-shadow-sm card-hover ${hoverGrades[gradient]}`}
+        style={{ animationDelay: `${delay}ms` }}
+      >
+        <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity from-zinc-900/[0.04] to-transparent"></div>
+        <div className="relative z-10 flex items-start gap-4">
+          <div
+            className={`h-12 w-12 shrink-0 rounded-xl bg-gradient-to-br ${grads[gradient]} text-white shadow-lg shadow-black/10 flex items-center justify-center`}
+          >
+            <Icon className="h-6 w-6" strokeWidth={2.25} />
           </div>
-          <p className="mt-1 text-sm text-zinc-500 leading-relaxed">
-            {description}
-          </p>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="font-semibold text-zinc-900 tracking-tight">
+                {label}
+              </h3>
+              <ChevronRight className="h-4 w-4 text-zinc-400 group-hover:text-zinc-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+            </div>
+            <p className="mt-1 text-sm text-zinc-500 leading-relaxed">
+              {description}
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
-  if (to) return <Link to={to}>{content}</Link>;
-  return content;
 }
 
 function getGreeting() {
@@ -173,12 +170,11 @@ function formatDate(d: Date) {
 function getSessionStatus(s: Session): {
   label: "Aktif" | "Kedaluwarsa" | "Tidak Aktif";
   variant: "success" | "danger" | "muted";
-  expired: boolean;
 } {
   const expired = new Date(s.valid_until) < new Date();
-  if (!s.is_active) return { label: "Tidak Aktif", variant: "muted", expired: true };
-  if (expired) return { label: "Kedaluwarsa", variant: "danger", expired: true };
-  return { label: "Aktif", variant: "success", expired: false };
+  if (!s.is_active) return { label: "Tidak Aktif", variant: "muted" };
+  if (expired) return { label: "Kedaluwarsa", variant: "danger" };
+  return { label: "Aktif", variant: "success" };
 }
 
 function StatusBadge({
@@ -229,19 +225,15 @@ export default function Dashboard() {
     const list = sessions ?? [];
     let activeCount = 0;
     let expiredCount = 0;
-    let inactiveCount = 0;
     list.forEach((s) => {
       const st = getSessionStatus(s);
       if (st.variant === "success") activeCount++;
       else if (st.variant === "danger") expiredCount++;
-      else inactiveCount++;
     });
     return {
       total: list.length,
       active: activeCount,
       expired: expiredCount,
-      inactive: inactiveCount,
-      todayAttendance: "-",
     };
   }, [sessions]);
 
@@ -270,17 +262,19 @@ export default function Dashboard() {
                 <span>Dashboard Overview</span>
               </div>
               <h1 className="mt-4 text-3xl md:text-4xl font-bold tracking-tight leading-tight">
-                {getGreeting()}, {user?.name?.split(" ")[0] ?? "Admin"} 👋
+                {getGreeting()}, {user?.name?.split(" ")[0] ?? "Administrator"}
               </h1>
               <p className="mt-2 text-blue-100 text-base md:text-lg">
-                {formatDate(today)} · Pantau sesi absensi dan kehadiran tim dari satu tempat.
+                {formatDate(today)}
+                <span className="mx-2 text-blue-200/60">|</span>
+                Pantau sesi absensi dan kehadiran tim dari satu tempat.
               </p>
             </div>
 
             <div className="flex items-center gap-3 shrink-0">
               <div className="hidden md:flex flex-col items-end text-right gap-0.5 pr-4 border-r border-white/20">
                 <p className="text-xs uppercase tracking-widest text-blue-100/90">
-                  Dept
+                  Departemen
                 </p>
                 <p className="font-semibold">
                   {user?.department ?? "Administrator"}
@@ -310,7 +304,7 @@ export default function Dashboard() {
         <StatCard
           title="Sesi Aktif"
           value={isLoading ? "…" : stats.active}
-          description="Sedang berjalan & dapat discan"
+          description="Sedang berjalan dan dapat discan"
           icon={UserCheck2}
           gradient="emerald"
           delay={110}
@@ -324,9 +318,9 @@ export default function Dashboard() {
           delay={160}
         />
         <StatCard
-          title="Pegawai Aktif"
-          value="-"
-          description="Akan diupdate dari database"
+          title="Data Pegawai"
+          value={isLoading ? "…" : "-"}
+          description="Total pegawai terdaftar"
           icon={Users}
           gradient="violet"
           delay={210}
@@ -340,7 +334,9 @@ export default function Dashboard() {
             <LayoutDashboard className="h-5 w-5 text-blue-600" />
             Menu Cepat
           </h2>
-          <p className="text-sm text-zinc-500">Akses fitur utama dalam satu klik</p>
+          <p className="text-sm text-zinc-500">
+            Akses fitur utama dalam satu klik
+          </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <QuickAction
@@ -360,24 +356,25 @@ export default function Dashboard() {
             delay={110}
           />
           <QuickAction
-            label="Kelola Sesi"
-            description="Lihat, edit, dan hapus seluruh riwayat sesi absensi"
-            icon={CalendarRange}
-            to="/sessions"
+            label="Data Pegawai"
+            description="Kelola akun, biodata, dan departemen pegawai"
+            icon={Users}
+            to="/employees"
             gradient="violet"
             delay={160}
           />
           <QuickAction
-            label="Data Pegawai"
-            description="Segera hadir - kelola data pegawai & departemen"
-            icon={Users}
+            label="Pengaturan Akun"
+            description="Ubah profil, kata sandi, dan preferensi akun"
+            icon={LayoutDashboard}
+            to="/settings"
             gradient="amber"
             delay={210}
           />
         </div>
       </section>
 
-      {/* ===== CONTENT GRID: Recent Sessions + Info ===== */}
+      {/* ===== CONTENT GRID ===== */}
       <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Recent Sessions */}
         <Card className="xl:col-span-2 border border-zinc-200/80 card-shadow-md overflow-hidden animate-float-in">
@@ -387,7 +384,11 @@ export default function Dashboard() {
               Sesi Absensi Terbaru
             </CardTitle>
             <Link to="/sessions">
-              <Button variant="ghost" size="sm" className="h-8 px-3 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-3 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              >
                 Lihat Semua
                 <ChevronRight className="ml-0.5 h-4 w-4" />
               </Button>
@@ -416,7 +417,8 @@ export default function Dashboard() {
                   Belum ada sesi absensi
                 </h3>
                 <p className="mt-1 text-sm text-zinc-500 max-w-sm mx-auto">
-                  Buat sesi absensi pertama Anda untuk mulai mencatat kehadiran tim.
+                  Buat sesi absensi pertama Anda untuk mulai mencatat
+                  kehadiran tim.
                 </p>
                 <Link to="/sessions" className="inline-block mt-5">
                   <Button className="bg-blue-600 hover:bg-blue-700 rounded-xl h-10">
@@ -475,39 +477,40 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Tips Card */}
+        {/* Right column */}
         <div className="space-y-5">
           <Card className="border-0 bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-600 text-white card-shadow-md overflow-hidden animate-float-in" style={{ animationDelay: "60ms" }}>
             <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-white/10 blur-3xl"></div>
             <CardContent className="relative p-6">
-              <Badge className="bg-white/20 border-0 text-white backdrop-blur">
-                💡 Tips Cepat
-              </Badge>
+              <div className="inline-flex items-center gap-2 bg-white/20 border-0 text-white backdrop-blur rounded-full px-2.5 py-1 text-[11px] font-semibold">
+                <Info className="h-3 w-3" />
+                Informasi Sistem
+              </div>
               <h3 className="mt-3 font-bold text-xl tracking-tight leading-snug">
-                Maksimalkan Kehadiran Tim
+                Verifikasi 4 Lapisan Keamanan
               </h3>
               <p className="mt-2 text-sm text-blue-100/95 leading-relaxed">
-                Aktifkan GPS pada perangkat sebelum melakukan scan. Pastikan koneksi internet stabil untuk proses verifikasi yang cepat dan akurat.
+                Setiap scan QR melewati serangkaian validasi untuk
+                memastikan keaslian data kehadiran dan mencegah duplikat
+                absensi.
               </p>
               <div className="mt-5 space-y-2.5">
-                <div className="flex items-center gap-2.5 text-sm">
-                  <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                    <Users className="h-3.5 w-3.5" />
+                {[
+                  { t: "Validasi UUID QR Code", d: "Kode unik setiap sesi" },
+                  { t: "Cek Status Sesi", d: "Aktif dan batas waktu" },
+                  { t: "Anti Duplikat User", d: "Satu user satu kali absen" },
+                  { t: "Lokasi Geo & Device", d: "GPS + User Agent dicatat" },
+                ].map((item, idx) => (
+                  <div key={item.t} className="flex items-center gap-2.5 text-sm">
+                    <div className="h-6 w-6 shrink-0 rounded-lg bg-white/15 backdrop-blur flex items-center justify-center text-[11px] font-bold border border-white/20">
+                      {idx + 1}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-white">{item.t}</p>
+                      <p className="text-xs text-blue-100/85">{item.d}</p>
+                    </div>
                   </div>
-                  <span className="text-blue-50">Satu sesi untuk seluruh tim</span>
-                </div>
-                <div className="flex items-center gap-2.5 text-sm">
-                  <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                    <MapPin className="h-3.5 w-3.5" />
-                  </div>
-                  <span className="text-blue-50">Radius lokasi presisi tinggi</span>
-                </div>
-                <div className="flex items-center gap-2.5 text-sm">
-                  <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                    <QrCode className="h-3.5 w-3.5" />
-                  </div>
-                  <span className="text-blue-50">QR Code aman dengan UUID unik</span>
-                </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -526,22 +529,34 @@ export default function Dashboard() {
                 <li className="px-5 py-3.5 flex items-start gap-3">
                   <div className="mt-0.5 h-2 w-2 rounded-full bg-emerald-500 shrink-0"></div>
                   <div className="flex-1">
-                    <p className="text-zinc-800">Sistem Login berhasil diperbarui</p>
-                    <p className="text-xs text-zinc-500 mt-0.5">Baru saja · Token-based auth</p>
+                    <p className="text-zinc-800">
+                      Sistem autentikasi token-based diperbarui
+                    </p>
+                    <p className="text-xs text-zinc-500 mt-0.5">
+                      Baru saja · Sanctum Guard diperbaiki
+                    </p>
                   </div>
                 </li>
                 <li className="px-5 py-3.5 flex items-start gap-3">
                   <div className="mt-0.5 h-2 w-2 rounded-full bg-blue-500 shrink-0"></div>
                   <div className="flex-1">
-                    <p className="text-zinc-800">Template Dashboard UI telah di-revamp</p>
-                    <p className="text-xs text-zinc-500 mt-0.5">Hari ini · Gradient modern</p>
+                    <p className="text-zinc-800">
+                      Halaman dashboard direvisi menjadi tampilan premium
+                    </p>
+                    <p className="text-xs text-zinc-500 mt-0.5">
+                      Hari ini · Gradient, motion, stat cards
+                    </p>
                   </div>
                 </li>
                 <li className="px-5 py-3.5 flex items-start gap-3">
                   <div className="mt-0.5 h-2 w-2 rounded-full bg-violet-500 shrink-0"></div>
                   <div className="flex-1">
-                    <p className="text-zinc-800">Validasi QR Scanner ditambahkan</p>
-                    <p className="text-xs text-zinc-500 mt-0.5">Kemarin · 4 layer verifikasi</p>
+                    <p className="text-zinc-800">
+                      Scanner QR diperkuat dengan 4 state validasi
+                    </p>
+                    <p className="text-xs text-zinc-500 mt-0.5">
+                      Kemarin · Corner markers & scanline
+                    </p>
                   </div>
                 </li>
               </ul>
