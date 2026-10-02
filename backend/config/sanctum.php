@@ -35,9 +35,14 @@ return [
     | are able to authenticate the request, Sanctum will use the bearer
     | token that's present on an incoming request for authentication.
     |
+    | NOTE: Set to empty array for pure Token-based API (Bearer Token auth).
+    | Laravel Sanctum will directly validate personal access tokens from
+    | Authorization: Bearer header without checking session cookies first.
+    | This fixes auth failures when using Personal Access Tokens via localStorage.
+    |
     */
 
-    'guard' => ['web'],
+    'guard' => [],
 
     /*
     |--------------------------------------------------------------------------

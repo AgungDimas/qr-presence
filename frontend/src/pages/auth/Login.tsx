@@ -52,9 +52,29 @@ export default function Login() {
       const response = await api.post("/login", values);
       login(response.data.access_token, response.data.user);
       toast.success("Login berhasil!");
-      navigate("/dashboard"); // Kita akan buat halaman ini nanti
+      navigate("/dashboard");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Login gagal, silakan periksa email/password");
+      const data = error.response?.data;
+
+      let message = "Login gagal, silakan periksa email/password";
+
+      if (data) {
+        if (data.errors && typeof data.errors === "object") {
+          const firstErrorKey = Object.keys(data.errors)[0];
+          if (firstErrorKey) {
+            const messages = data.errors[firstErrorKey];
+            if (Array.isArray(messages) && messages.length > 0) {
+              message = messages[0];
+            }
+          }
+        }
+
+        if ((message === "Login gagal, silakan periksa email/password" || message.startsWith("The given data")) && data.message) {
+          message = data.message;
+        }
+      }
+
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }

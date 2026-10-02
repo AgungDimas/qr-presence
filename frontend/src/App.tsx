@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './layouts/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import Sessions from './pages/sessions/Sessions';
+import Scan from './pages/attendances/Scan';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/sessions" element={<Sessions />} />
+              <Route path="/scan" element={<Scan />} />
               {/* Rute fitur lain akan kita tambahkan di sini nanti */}
             </Route>
           </Route>

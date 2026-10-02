@@ -10,6 +10,7 @@ Route::post('/login', [AuthController::class, 'login']);
 // Route Protected
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('/attendance-sessions', AttendanceSessionController::class);
+    Route::post('/attendances/scan', [\App\Http\Controllers\AttendanceController::class, 'scan']);
 });
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
