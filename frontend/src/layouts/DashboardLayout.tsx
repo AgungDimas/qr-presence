@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -12,6 +12,7 @@ import {
   Sparkles,
   Clock3,
   ChevronRight,
+  Home as HomeIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import api from "@/services/api";
 import toast from "react-hot-toast";
+import { isStaffRole } from "@/components/RoleProtectedRoute";
 
 /* ---------- Helpers ---------- */
 type NavItem = {
@@ -40,21 +42,22 @@ type NavItem = {
   badgeVariant?: "default" | "emerald" | "amber";
 };
 
-const navigation: NavItem[] = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Sesi Absensi", href: "/sessions", icon: QrCode },
-  { name: "Scan QR", href: "/scan", icon: ScanLine },
-  {
-    name: "Pegawai",
-    href: "/employees",
-    icon: Users,
-  },
-  {
-    name: "Pengaturan",
-    href: "/settings",
-    icon: Settings,
-  },
-];
+function getNavigationForRole(role: string | undefined | null): NavItem[] {
+  if (isStaffRole(role)) {
+    return [
+      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+      { name: "Sesi Absensi", href: "/sessions", icon: QrCode },
+      { name: "Scan QR", href: "/scan", icon: ScanLine },
+      { name: "Pegawai", href: "/employees", icon: Users },
+      { name: "Pengaturan", href: "/settings", icon: Settings },
+    ];
+  }
+  return [
+    { name: "Beranda", href: "/home", icon: HomeIcon },
+    { name: "Scan QR", href: "/scan", icon: ScanLine },
+    { name: "Pengaturan", href: "/settings", icon: Settings },
+  ];
+}
 
 const badgeCls = (variant?: "default" | "emerald" | "amber") => {
   switch (variant) {
@@ -69,15 +72,20 @@ const badgeCls = (variant?: "default" | "emerald" | "amber") => {
 
 function SidebarContent() {
   const location = useLocation();
+  const { user } = useAuth();
+  const navigation = useMemo(() => getNavigationForRole(user?.role), [user?.role]);
+
+  const brandHref = isStaffRole(user?.role) ? "/dashboard" : "/home";
+
   return (
     <div className="flex h-full flex-col gap-4 bg-gradient-to-b from-zinc-950 via-zinc-950 to-zinc-900 text-zinc-50">
       {/* ===== Brand Header ===== */}
       <div className="relative overflow-hidden border-b border-white/5 px-6 py-5 lg:py-[22px]">
         <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-blue-500/20 blur-2xl"></div>
         <div className="absolute -left-6 bottom-0 h-20 w-20 rounded-full bg-violet-500/10 blur-2xl"></div>
-        <Link to="/dashboard" className="relative z-10 flex items-center gap-3 font-semibold">
-          <div className="h-10 w-10 rounded-xl bg-gradient-br bg-gradient-blue text-white flex items-center justify-center shadow-lg shadow-blue-500/30">
-            <QrCode className="h-5.5 w-5.5" strokeWidth={2.25} />
+        <Link to={brandHref} className="relative z-10 flex items-center gap-3 font-semibold">
+          <div className="h-10 w-10 rounded-xl overflow-hidden border border-white/10 shadow-lg shadow-blue-500/20 bg-white/5 flex items-center justify-center">
+            <img src="/logo2.jpeg" alt="QR Presence Logo" className="h-full w-full object-cover" />
           </div>
           <div className="leading-tight">
             <p className="text-lg tracking-tight">QR Presence</p>
@@ -194,11 +202,10 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const loading = !!token && !user; // Ada token tapi user belum ke-fetch = loading
 
-  if (loading) {
-    return <LayoutSkeleton />;
-  }
+  // ===== SEMUA HOOK HARUS DI ATAS EARLY RETURN (Rules of Hooks) =====
+  const pageNavigation = useMemo(() => getNavigationForRole(user?.role), [user?.role]);
 
-  // Fungsi Logout
+  // Fungsi Logout (useCallback hanya wrap agar identitas stabil; tetap hook → atas)
   const handleLogout = async () => {
     try {
       await api.post("/logout");
@@ -211,11 +218,18 @@ export default function DashboardLayout() {
     }
   };
 
+  // ===== CONDITIONAL RETURN: HANYA BOLEH SETELAH SEMUA HOOK DIPANGGIL =====
+  if (loading) {
+    return <LayoutSkeleton />;
+  }
+
   const getPageTitle = () => {
-    const match = navigation.find(
+    const match = pageNavigation.find(
       (n) => !n.disabled && (location.pathname === n.href || location.pathname.startsWith(n.href + "/"))
     );
-    return match?.name ?? "Dashboard";
+    if (match) return match.name;
+    if (location.pathname === "/home") return "Beranda";
+    return isStaffRole(user?.role) ? "Dashboard" : "Beranda";
   };
 
   const avatarInitials =

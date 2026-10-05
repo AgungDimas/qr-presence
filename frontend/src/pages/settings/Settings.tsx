@@ -21,6 +21,7 @@ import {
 
 import api from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { isStaffRole } from "@/components/RoleProtectedRoute";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -107,13 +108,18 @@ const ROLE_BADGE: Record<string, string> = {
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth();
   const [activeTab, setActiveTab] = useState<"profile" | "password">("profile");
+  const staff = isStaffRole(user?.role);
 
+  // Endpoint /departments HANYA bisa diakses oleh STAFF (admin/manager).
+  // Gunakan `enabled: staff` agar query TIDAK PERNAH dijalankan untuk non-staff,
+  // sehingga employee / HR tidak kena 403 yang menyebabkan crash / white screen.
   const { data: departments = [] } = useQuery<DepartmentOption[]>({
     queryKey: ["departments"],
     queryFn: async () => {
       const res = await api.get("/departments");
       return (res.data?.data as DepartmentOption[]) ?? [];
     },
+    enabled: staff,
     staleTime: 1000 * 60 * 10,
   });
 
@@ -157,13 +163,17 @@ export default function SettingsPage() {
 
   /* ---- MUTATIONS ---- */
   const profileMut = useMutation({
-    mutationFn: (v: ProfileValues) =>
-      api.put("/settings/profile", {
+    mutationFn: (v: ProfileValues) => {
+      const payload: Record<string, any> = {
         name: v.name,
         email: v.email,
         avatar: v.avatar || null,
-        department_id: v.department_id ?? null,
-      }),
+      };
+      if (staff) {
+        payload.department_id = v.department_id ?? null;
+      }
+      return api.put("/settings/profile", payload);
+    },
     onSuccess: async () => {
       await refreshUser();
       toast.success("Profil berhasil diperbarui");
@@ -361,34 +371,54 @@ export default function SettingsPage() {
                         </FormItem>
                       )}
                     />
-                    <FormField
-                      control={profileForm.control}
-                      name="department_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="font-medium text-zinc-800">Departemen</FormLabel>
-                          <FormControl>
-                            <select
-                              value={field.value ?? ""}
-                              onChange={(e) =>
-                                field.onChange(e.target.value ? Number(e.target.value) : null)
-                              }
-                              onBlur={field.onBlur}
-                              ref={field.ref}
-                              className="flex h-11 w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
-                            >
-                              <option value="">-- Tidak ada --</option>
-                              {departments.map((d) => (
-                                <option key={d.id} value={d.id}>
-                                  {d.name}
-                                </option>
-                              ))}
-                            </select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {staff ? (
+                      <FormField
+                        control={profileForm.control}
+                        name="department_id"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="font-medium text-zinc-800">Departemen</FormLabel>
+                            <FormControl>
+                              <select
+                                value={field.value ?? ""}
+                                onChange={(e) =>
+                                  field.onChange(e.target.value ? Number(e.target.value) : null)
+                                }
+                                onBlur={field.onBlur}
+                                ref={field.ref}
+                                className="flex h-11 w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
+                              >
+                                <option value="">-- Tidak ada --</option>
+                                {departments.map((d) => (
+                                  <option key={d.id} value={d.id}>
+                                    {d.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    ) : (
+                      <div className="FormItem">
+                        <label className="text-sm font-medium text-zinc-800 mb-1.5 block">
+                          Departemen
+                        </label>
+                        <div className="flex h-11 w-full items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50/80 px-3 text-sm text-zinc-700">
+                          <Badge
+                            variant="outline"
+                            className="px-2.5 py-1 text-xs border-zinc-200 bg-white text-zinc-700"
+                          >
+                            <Building2 className="h-3 w-3 mr-1" />
+                            {user?.department || "Belum ditentukan"}
+                          </Badge>
+                          <p className="text-xs text-zinc-500">
+                            Hubungi Admin / Manager untuk perubahan departemen.
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <Separator className="my-1" />
